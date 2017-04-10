@@ -1,100 +1,79 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>TODO APP</title>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
-<link rel="stylesheet" href="style.css">
-<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
-<body ng-app="todoApp" >
-<div class="row" ng-controller="todaysTaskCtrl">
-<form ng-submit="todoAdd()">
-<div class="col-md-8" style="background-color: #478999; height: 100%; min-height: 100%;" id="fullheight" >
-<h3 style="color: #fff;">TODAY'S TASK</h3>
-<br>
-<br>
-<div class="form-group">
-  <input type="text" class="form-control" ng-model="todaysTask" placeholder="Enter task to be done">
-</div>
-<br>
-<br>
-<div ng-repeat="x in todoList">
-    <input type="checkbox" ng-model="x.done" ng-change="moveTask(x.todoText)"> <span ng-bind="x.todoText"></span>
-</div>
-<br>
-<br>
-</div>
-<div class="col-md-4" >
-<div class="row" style="background-color: #245059">
-<div class="col-md-12" ng-controller="completedTaskCtrl">
-<h3 style="color: #fff;">FINISHED TODAY'S TASK</h3>
-<br>
-<div ng-repeat="x in messages">
-     <span ng-bind="x.title"></span>
-</div>
-</div>
-</div>
-<div class="row" style="background-color: #85ABB8;">
-<div class="col-md-12" ng-controller="historyTaskCtrl">
-<h3 style="color: #fff;">TASK HISTORY</h3>
-<div ng-repeat="x in messages">
-     <span ng-bind="x.title"></span>
-</div>
-</div>
-</div>
-</div>
-</div>
-</form>
-<br>
-<script>
-var app = angular.module('todoApp', []); 
-app.controller('todaysTaskCtrl', function($scope) {
-    $scope.todoList = [{todoText:'Send mail to steve', done:false, colorClass: 'textwhite'}];
+	<!DOCTYPE html>
+	<html>
+	<head>
+	<title>TODO LIST</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+	<link rel="stylesheet" href="style.css">
+	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+	<script src="angular-ui-router.js"></script>
+	<body ng-app="todoApp" >
+	<nav class="navbar navbar-default">
+	  <div class="container-fluid">
+		<div class="navbar-header">
+		  <a class="navbar-brand" href="#">TODO LIST</a>
+		</div>
+		<ul class="nav navbar-nav">
+		  <li class="active"><a href="#">Dashboard</a></li>
+		  <li><a href="#">Menu 1</a></li>
+		  <li><a href="#">Menu 2</a></li>
+		  <li><a href="#">Menu 3</a></li>
+		</ul>
+	  </div>
+	</nav>
+	  
+	<div class="container" ng-init="projectList = projectList">
+	 <div class="row" ng-controller="todaysTaskCtrl">
+	 <label>Search Project: <input ng-model="search"></label>
+	<table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>Serial</th>
+        <th>Project Name</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody ng-repeat="proj in projectList | filter:search:strict">
+      <tr ng-click="projectDetailClicked(proj)">
+        <td>{{proj.serial}}</td>
+        <td>{{proj.projectName}}</td>
+        <td>{{proj.status}}</td>
+      </tr>
+    </tbody>
+  </table>
+	</div>
+	</div>
+	<div id="footer">
+      <div class="container">
 
-    $scope.todoAdd = function() {
-        $scope.todoList.push({todoText:$scope.todaysTask, done:false});
-        $scope.todaysTask = "";
-    };
+      </div>
+    </div>
 
-    $scope.remove = function() {
-        var oldList = $scope.todoList;
-        $scope.todoList = [];
-        angular.forEach(oldList, function(x) {
-            if (!x.done) $scope.todoList.push(x);
-        });
-    };
-	$scope.moveTask = function(item)
-	{
-	$scope.$broadcast('eventName', { message: item });
-	$scope.remove();
-	}
+	<script>
+	var app = angular.module('todoApp', ['ui.router']); 
+	app.controller('todaysTaskCtrl', function($scope, $http) {
+		$http({
+    url: 'http://jsonstub.com/getProjectList',
+    method: 'GET',
+    dataType: 'json', 
+    data: '',         
+    headers: {
+        'Content-Type': 'application/json',
+        'JsonStub-User-Key': 'e2bfd02e-ac0b-4713-9222-585f17c30cea',
+        'JsonStub-Project-Key': 'ff203162-b316-4b3d-b3b5-a2ff5e08c253'
+    }
+}).success(function (data, status, headers, config) {
+     $scope.projectList = data.projectName;
+    
 });
-app.controller('completedTaskCtrl', function($scope) {
-$scope.messages = JSON.parse(localStorage.getItem('completedTasks'));
-     $scope.$on('eventName', function (event, args) {
-     var existingEntries = JSON.parse(localStorage.getItem("completedTasks"));
-    if(existingEntries == null) existingEntries = [];
-    var entryTitle = args.message;
-    var entry = {
-        "title": entryTitle
-    };
-    localStorage.setItem("entry", JSON.stringify(entry));
-	existingEntries.push(entry);
-	localStorage.setItem("completedTasks",JSON.stringify(existingEntries));
-	$scope.messages = JSON.parse(localStorage.getItem('completedTasks'));
-    // Save allEntries back to local storage
-})
-});
-app.controller('historyTaskCtrl', function($scope) {
-	$scope.messages = JSON.parse(localStorage.getItem('completedTasks'));
-     $scope.$on('eventName', function (event, args) {
-     var existingEntries = JSON.parse(localStorage.getItem("completedTasks"));
-	$scope.messages = JSON.parse(localStorage.getItem('completedTasks'));
-    // Save allEntries back to local storage
-})
-});
-</script>
 
-</body>
-</html>
+$scope.projectDetailClicked = function(obj){
+alert("Project Name: " + obj.projectName + ' ' + "Status: " + obj.status);
+}
+	});
+	
+	</script>
+
+	</body>
+	</html>
